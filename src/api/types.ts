@@ -2,6 +2,31 @@ export type MedioPago = 'MERCADO_PAGO' | 'EFECTIVO';
 export type EstadoPago = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO' | 'CANCELADO';
 export type EstadoOrden = 'CREADA' | 'PAGANDO' | 'PAGADA' | 'RECHAZADA' | 'CANCELADA' | 'EXPIRADA';
 export type TipoProducto = 'SIMPLE' | 'COMBO';
+export type UnidadMedida = 'GR' | 'UN';
+
+export interface Insumo {
+  id: number;
+  nombre: string;
+  unidadMedida: UnidadMedida;
+  precioUnitario: number;
+  activo: boolean;
+}
+
+export interface RecetaItem {
+  insumoId: number;
+  insumo: Insumo;
+  cantidad: number;
+  costo: number;
+}
+
+export interface Receta {
+  productoId: number;
+  nombre: string;
+  precioClp: number;
+  costoTotal: number;
+  margen: number;
+  items: RecetaItem[];
+}
 
 export interface Categoria {
   id: number;
@@ -67,6 +92,30 @@ export interface VentasPorProducto {
     cantidad: number;
     total: number;
   }[];
+}
+
+export interface KioskoImage {
+  id: number;
+  filename: string;
+  titulo: string | null;
+  orden: number;
+  activa: boolean;
+  fijada: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KioskoPublicImage {
+  id: number;
+  url: string;
+  titulo: string | null;
+  orden: number;
+  fijada: boolean;
+}
+
+export interface KioskoState {
+  images: KioskoPublicImage[];
+  pinnedId: number | null;
 }
 
 export interface VentasPorHorario {

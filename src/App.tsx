@@ -4,7 +4,9 @@ import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { CategoriasPage } from './pages/CategoriasPage';
 import { ProductosPage } from './pages/ProductosPage';
+import { InsumosPage } from './pages/InsumosPage';
 import { VentasPage } from './pages/VentasPage';
+import { KioskoPage } from './pages/KioskoPage';
 
 export function App() {
   return (
@@ -22,6 +24,8 @@ export function App() {
           <Route path="/ventas" element={<VentasPage />} />
           <Route path="/categorias" element={<CategoriasPage />} />
           <Route path="/productos" element={<ProductosPage />} />
+          <Route path="/insumos" element={<InsumosPage />} />
+          <Route path="/kiosko" element={<KioskoPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

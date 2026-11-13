@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CategoriasAPI, ProductosAPI } from '../api/endpoints';
-import type { Categoria, Producto, TipoProducto } from '../api/types';
+import { CategoriasAPI, ProductosAPI, InsumosAPI } from '../api/endpoints';
+import type { Categoria, Producto, TipoProducto, Insumo, Receta } from '../api/types';
 
 export function ProductosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -12,6 +12,7 @@ export function ProductosPage() {
   const [editing, setEditing] = useState<Producto | null>(null);
   const [creating, setCreating] = useState(false);
   const [comboFor, setComboFor] = useState<Producto | null>(null);
+  const [recetaFor, setRecetaFor] = useState<Producto | null>(null);
 
   const reload = async () => {
     setLoading(true);
@@ -108,7 +109,10 @@ export function ProductosPage() {
                       Editar
                     </button>
                     {p.tipo === 'COMBO' && (
-                      <button className="ghost" onClick={() => setComboFor(p)}>Combo</button>
+                      <button className="ghost" onClick={() => setComboFor(p)} style={{ marginRight: 6 }}>Combo</button>
+                    )}
+                    {p.tipo === 'SIMPLE' && (
+                      <button className="ghost" onClick={() => setRecetaFor(p)}>Receta</button>
                     )}
                   </td>
                 </tr>
@@ -155,6 +159,13 @@ export function ProductosPage() {
             setComboFor(null);
             reload();
           }}
+        />
+      )}
+      {recetaFor && (
+        <RecetaForm
+          producto={recetaFor}
+          onClose={() => setRecetaFor(null)}
+          onSaved={() => setRecetaFor(null)}
         />
       )}
     </div>
@@ -393,6 +404,195 @@ function ComboForm({
         <div className="actions">
           <button className="ghost" onClick={onClose}>Cancelar</button>
           <button onClick={submit} disabled={saving || componentes.length === 0}>
+            {saving ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RecetaForm({
+  producto,
+  onClose,
+  onSaved,
+}: {
+  producto: Producto;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [items, setItems] = useState<{ insumoId: number; cantidad: number }[]>([]);
+  const [insumos, setInsumos] = useState<Insumo[]>([]);
+  const [receta, setReceta] = useState<Receta | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [ins, rec] = await Promise.all([
+          InsumosAPI.list(false),
+          ProductosAPI.getReceta(producto.id),
+        ]);
+        setInsumos(ins);
+        setReceta(rec);
+        setItems(rec.items.map((it) => ({ insumoId: it.insumoId, cantidad: it.cantidad })));
+      } catch (e: any) {
+        setError(e.response?.data?.message ?? 'Error al cargar');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [producto.id]);
+
+  const insumosMap = useMemo(() => new Map(insumos.map((i) => [i.id, i])), [insumos]);
+
+  const costoTotal = useMemo(
+    () =>
+      items.reduce((sum, it) => {
+        const ins = insumosMap.get(it.insumoId);
+        if (!ins) return sum;
+        if (ins.unidadMedida === 'GR') {
+          return sum + Math.round((it.cantidad * ins.precioUnitario) / 1000);
+        }
+        return sum + it.cantidad * ins.precioUnitario;
+      }, 0),
+    [items, insumosMap],
+  );
+  const margen = (receta?.precioClp ?? producto.precioClp) - costoTotal;
+
+  const add = () => {
+    const disponibles = insumos.filter((i) => !items.some((it) => it.insumoId === i.id));
+    if (disponibles.length === 0) return;
+    setItems([...items, { insumoId: disponibles[0].id, cantidad: 0 }]);
+  };
+
+  const update = (i: number, patch: Partial<{ insumoId: number; cantidad: number }>) =>
+    setItems(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+
+  const remove = (i: number) => setItems(items.filter((_, idx) => idx !== i));
+
+  const submit = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await ProductosAPI.setReceta(producto.id, items);
+      onSaved();
+    } catch (e: any) {
+      const msg = e.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join(', ') : (msg?.toString() ?? 'Error al guardar'));
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ minWidth: 560 }}>
+        <h3>Receta de "{producto.nombre}"</h3>
+        {loading ? (
+          <div>Cargando…</div>
+        ) : (
+          <>
+            {insumos.length === 0 && (
+              <div style={{ color: 'var(--muted)', marginBottom: 12 }}>
+                No hay insumos activos. Crea insumos en la sección "Insumos" primero.
+              </div>
+            )}
+            {items.length === 0 && insumos.length > 0 && (
+              <div style={{ color: 'var(--muted)', marginBottom: 12 }}>
+                Agrega los insumos que componen este producto.
+              </div>
+            )}
+            {items.map((it, i) => {
+              const ins = insumosMap.get(it.insumoId);
+              const usados = new Set(items.filter((_, idx) => idx !== i).map((x) => x.insumoId));
+              const opciones = insumos.filter((x) => !usados.has(x.id));
+              const costoLinea = ins
+                ? ins.unidadMedida === 'GR'
+                  ? Math.round((it.cantidad * ins.precioUnitario) / 1000)
+                  : it.cantidad * ins.precioUnitario
+                : 0;
+              return (
+                <div key={i} className="row" style={{ marginBottom: 8, alignItems: 'center', gap: 8 }}>
+                  <select
+                    value={it.insumoId}
+                    onChange={(e) => update(i, { insumoId: parseInt(e.target.value, 10) })}
+                    style={{ flex: 1 }}
+                  >
+                    {opciones.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min={0}
+                    value={it.cantidad}
+                    onChange={(e) => update(i, { cantidad: parseInt(e.target.value || '0', 10) })}
+                    style={{ width: 100 }}
+                  />
+                  <span style={{ width: 40, color: 'var(--muted)' }}>
+                    {ins?.unidadMedida === 'GR' ? 'g' : 'un'}
+                  </span>
+                  <span style={{ width: 90, textAlign: 'right' }}>
+                    ${costoLinea.toLocaleString('es-CL')}
+                  </span>
+                  <button className="ghost" onClick={() => remove(i)}>
+                    Quitar
+                  </button>
+                </div>
+              );
+            })}
+            <button
+              className="ghost"
+              onClick={add}
+              disabled={insumos.length === 0 || items.length >= insumos.length}
+            >
+              + Agregar insumo
+            </button>
+
+            <div
+              style={{
+                marginTop: 16,
+                padding: 12,
+                background: 'var(--bg)',
+                border: '1px solid var(--border)',
+                borderRadius: 6,
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gap: 8,
+                fontSize: 14,
+                color: 'var(--text)',
+              }}
+            >
+              <div>
+                <div style={{ color: 'var(--muted)' }}>Precio venta</div>
+                <div style={{ fontWeight: 600 }}>
+                  ${producto.precioClp.toLocaleString('es-CL')}
+                </div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--muted)' }}>Costo total</div>
+                <div style={{ fontWeight: 600 }}>${costoTotal.toLocaleString('es-CL')}</div>
+              </div>
+              <div>
+                <div style={{ color: 'var(--muted)' }}>Margen</div>
+                <div style={{ fontWeight: 600, color: margen >= 0 ? 'inherit' : 'crimson' }}>
+                  ${margen.toLocaleString('es-CL')}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {error && <div className="error">{error}</div>}
+        <div className="actions">
+          <button className="ghost" onClick={onClose}>
+            Cerrar
+          </button>
+          <button onClick={submit} disabled={saving || loading}>
             {saving ? 'Guardando…' : 'Guardar'}
           </button>
         </div>

@@ -155,3 +155,65 @@ label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px
 .heatmap .hm-cell.lvl-3 { background: rgba(59,130,246,0.55); }
 .heatmap .hm-cell.lvl-4 { background: rgba(59,130,246,0.78); }
 .heatmap .hm-cell.lvl-5 { background: rgba(37,99,235,1); }
+
+.kiosko-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.kiosko-banner:has(button.danger) { border-left-color: var(--warn); }
+.kiosko-banner-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.kiosko-banner-title { font-size: 18px; font-weight: 600; margin-top: 2px; }
+
+.kiosko-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.kiosko-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.15s;
+}
+.kiosko-card.pinned { border-color: var(--warn); box-shadow: 0 0 0 2px rgba(245,158,11,0.25); }
+.kiosko-card.inactive { opacity: 0.55; }
+
+.kiosko-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+}
+.kiosko-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kiosko-pin-flag {
+  position: absolute; top: 8px; left: 8px;
+  background: var(--warn); color: #000; font-weight: 700; font-size: 11px;
+  padding: 4px 8px; border-radius: 4px;
+}
+.kiosko-inactive-flag {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(0,0,0,0.65); color: var(--muted); font-size: 11px;
+  padding: 4px 8px; border-radius: 4px;
+}
+
+.kiosko-meta { padding: 10px 12px 4px; }
+.kiosko-title { font-size: 14px; font-weight: 600; }
+.kiosko-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.kiosko-actions {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  padding: 8px 12px 12px;
+}
+.kiosko-actions button { padding: 6px 10px; font-size: 12px; flex: 1 1 auto; min-width: 70px; }
+.kiosko-actions button:first-child { flex: 2 1 auto; }

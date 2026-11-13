@@ -6,8 +6,13 @@ import type {
   ListadoVentas,
   TipoProducto,
   MedioPago,
+  UnidadMedida,
+  Insumo,
+  Receta,
   VentasPorProducto,
   VentasPorHorario,
+  KioskoImage,
+  KioskoState,
 } from './types';
 
 export const CategoriasAPI = {
@@ -49,6 +54,22 @@ export const ProductosAPI = {
   ) => api.patch<Producto>(`/api/productos/${id}`, data).then((r) => r.data),
   setCombo: (id: number, componentes: { productoId: number; cantidad: number }[]) =>
     api.put(`/api/productos/${id}/combo`, { componentes }).then((r) => r.data),
+  getReceta: (id: number) =>
+    api.get<Receta>(`/api/productos/${id}/receta`).then((r) => r.data),
+  setReceta: (id: number, items: { insumoId: number; cantidad: number }[]) =>
+    api.put<Receta>(`/api/productos/${id}/receta`, { items }).then((r) => r.data),
+};
+
+export const InsumosAPI = {
+  list: (incluirInactivos = false) =>
+    api.get<Insumo[]>('/api/insumos', { params: { incluirInactivos } }).then((r) => r.data),
+  create: (data: { nombre: string; unidadMedida: UnidadMedida; precioUnitario: number }) =>
+    api.post<Insumo>('/api/insumos', data).then((r) => r.data),
+  update: (
+    id: number,
+    data: Partial<{ nombre: string; unidadMedida: UnidadMedida; precioUnitario: number; activo: boolean }>,
+  ) => api.patch<Insumo>(`/api/insumos/${id}`, data).then((r) => r.data),
+  remove: (id: number) => api.delete(`/api/insumos/${id}`).then((r) => r.data),
 };
 
 export interface VentasFiltros {
@@ -56,6 +77,34 @@ export interface VentasFiltros {
   hasta?: string;
   medioPago?: MedioPago;
 }
+
+export const KioskoAPI = {
+  state: () => api.get<KioskoState>('/api/kiosko/state').then((r) => r.data),
+  listAll: (incluirInactivas = true) =>
+    api
+      .get<KioskoImage[]>('/api/kiosko/images', { params: { incluirInactivas } })
+      .then((r) => r.data),
+  upload: (file: File, titulo?: string, orden?: number) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (titulo) form.append('titulo', titulo);
+    if (orden !== undefined) form.append('orden', String(orden));
+    return api
+      .post<KioskoImage>('/api/kiosko/images', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data);
+  },
+  update: (
+    id: number,
+    data: Partial<{ titulo: string | null; orden: number; activa: boolean }>,
+  ) => api.patch<KioskoImage>(`/api/kiosko/images/${id}`, data).then((r) => r.data),
+  remove: (id: number) =>
+    api.delete(`/api/kiosko/images/${id}`).then((r) => r.data),
+  pin: (id: number) =>
+    api.post<KioskoState>(`/api/kiosko/pin/${id}`).then((r) => r.data),
+  unpin: () => api.post<KioskoState>('/api/kiosko/unpin').then((r) => r.data),
+};
 
 export const VentasAPI = {
   resumen: (filtros: VentasFiltros) =>
