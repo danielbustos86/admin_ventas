@@ -5,3 +5,7 @@ dist
 .vite
 *.log
 tsconfig.tsbuildinfo
+
+.agents/
+.claude/
+skills-lock.json

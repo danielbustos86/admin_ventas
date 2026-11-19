@@ -23,6 +23,9 @@ export function Layout() {
           <NavLink to="/kiosko" className={({ isActive }) => (isActive ? 'active' : '')}>
             Kiosko
           </NavLink>
+          <NavLink to="/sabores" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Sabores
+          </NavLink>
         </nav>
         <button className="logout" onClick={logout}>Cerrar sesión</button>
       </aside>

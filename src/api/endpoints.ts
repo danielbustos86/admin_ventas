@@ -13,6 +13,7 @@ import type {
   VentasPorHorario,
   KioskoImage,
   KioskoState,
+  Sabor,
 } from './types';
 
 export const CategoriasAPI = {
@@ -50,6 +51,7 @@ export const ProductosAPI = {
       etiquetaVariante: string | null;
       disponible: boolean;
       activo: boolean;
+      visibleWeb: boolean;
     }>,
   ) => api.patch<Producto>(`/api/productos/${id}`, data).then((r) => r.data),
   setCombo: (id: number, componentes: { productoId: number; cantidad: number }[]) =>
@@ -104,6 +106,15 @@ export const KioskoAPI = {
   pin: (id: number) =>
     api.post<KioskoState>(`/api/kiosko/pin/${id}`).then((r) => r.data),
   unpin: () => api.post<KioskoState>('/api/kiosko/unpin').then((r) => r.data),
+};
+
+export const SaboresAPI = {
+  list: () => api.get<Sabor[]>('/api/sabores/admin').then((r) => r.data),
+  create: (data: { nombre: string; color?: string; orden?: number }) =>
+    api.post<Sabor>('/api/sabores', data).then((r) => r.data),
+  update: (id: number, data: Partial<Pick<Sabor, 'nombre' | 'color' | 'orden' | 'activo'>>) =>
+    api.patch<Sabor>(`/api/sabores/${id}`, data).then((r) => r.data),
+  remove: (id: number) => api.delete(`/api/sabores/${id}`).then((r) => r.data),
 };
 
 export const VentasAPI = {

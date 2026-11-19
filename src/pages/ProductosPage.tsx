@@ -82,6 +82,7 @@ export function ProductosPage() {
                 <th>Precio</th>
                 <th>Variante</th>
                 <th>Estado</th>
+                <th>Web</th>
                 <th></th>
               </tr>
             </thead>
@@ -104,6 +105,11 @@ export function ProductosPage() {
                       {p.activo ? (p.disponible ? 'Disponible' : 'No disponible') : 'Inactivo'}
                     </span>
                   </td>
+                  <td>
+                    <span className={`badge ${p.visibleWeb ? 'success' : 'muted'}`}>
+                      {p.visibleWeb ? 'Visible' : 'Oculto'}
+                    </span>
+                  </td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                     <button className="ghost" onClick={() => setEditing(p)} style={{ marginRight: 6 }}>
                       Editar
@@ -119,7 +125,7 @@ export function ProductosPage() {
               ))}
               {productos.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', color: 'var(--muted)' }}>
+                  <td colSpan={10} style={{ textAlign: 'center', color: 'var(--muted)' }}>
                     Sin productos.
                   </td>
                 </tr>
@@ -192,6 +198,7 @@ function ProductoForm({
   const [etiquetaVariante, setEtiquetaVariante] = useState(producto?.etiquetaVariante ?? '');
   const [disponible, setDisponible] = useState(producto?.disponible ?? true);
   const [activo, setActivo] = useState(producto?.activo ?? true);
+  const [visibleWeb, setVisibleWeb] = useState(producto?.visibleWeb ?? true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -208,6 +215,7 @@ function ProductoForm({
       etiquetaVariante: etiquetaVariante.trim() || null,
       disponible,
       activo,
+      visibleWeb,
     };
     try {
       if (producto) {
@@ -309,6 +317,17 @@ function ProductoForm({
                 >
                   <option value="1">Sí</option>
                   <option value="0">No</option>
+                </select>
+              </div>
+              <div>
+                <label>Visible en web</label>
+                <select
+                  value={visibleWeb ? '1' : '0'}
+                  onChange={(e) => setVisibleWeb(e.target.value === '1')}
+                  style={{ width: '100%' }}
+                >
+                  <option value="1">Visible</option>
+                  <option value="0">Oculto</option>
                 </select>
               </div>
             </>

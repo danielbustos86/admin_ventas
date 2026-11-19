@@ -47,6 +47,7 @@ export interface Producto {
   etiquetaVariante: string | null;
   disponible: boolean;
   activo: boolean;
+  visibleWeb: boolean;
 }
 
 export interface ResumenVentas {
@@ -92,6 +93,23 @@ export interface VentasPorProducto {
     cantidad: number;
     total: number;
   }[];
+}
+
+export interface Sabor {
+  id: number;
+  nombre: string;
+  color: string;
+  orden: number;
+  activo: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaborPublic {
+  id: number;
+  nombre: string;
+  color: string;
+  orden: number;
 }
 
 export interface KioskoImage {
