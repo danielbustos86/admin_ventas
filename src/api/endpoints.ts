@@ -54,6 +54,15 @@ export const ProductosAPI = {
       visibleWeb: boolean;
     }>,
   ) => api.patch<Producto>(`/api/productos/${id}`, data).then((r) => r.data),
+  uploadImagen: (id: number, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api
+      .post<Producto>(`/api/productos/${id}/imagen`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data);
+  },
   setCombo: (id: number, componentes: { productoId: number; cantidad: number }[]) =>
     api.put(`/api/productos/${id}/combo`, { componentes }).then((r) => r.data),
   getReceta: (id: number) =>

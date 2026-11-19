@@ -199,8 +199,16 @@ function ProductoForm({
   const [disponible, setDisponible] = useState(producto?.disponible ?? true);
   const [activo, setActivo] = useState(producto?.activo ?? true);
   const [visibleWeb, setVisibleWeb] = useState(producto?.visibleWeb ?? true);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(producto?.imagenUrl ?? null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setImageFile(file);
+    if (file) setImagePreview(URL.createObjectURL(file));
+  };
 
   const submit = async () => {
     setSaving(true);
@@ -218,11 +226,13 @@ function ProductoForm({
       visibleWeb,
     };
     try {
+      let saved: Awaited<ReturnType<typeof ProductosAPI.create>>;
       if (producto) {
-        await ProductosAPI.update(producto.id, payload);
+        saved = await ProductosAPI.update(producto.id, payload);
       } else {
-        await ProductosAPI.create(payload);
+        saved = await ProductosAPI.create(payload);
       }
+      if (imageFile) await ProductosAPI.uploadImagen(saved.id, imageFile);
       onSaved();
     } catch (e: any) {
       const msg = e.response?.data?.message;
@@ -295,6 +305,20 @@ function ProductoForm({
               style={{ width: '100%' }}
             />
           </div>
+          <div className="full">
+            <label>Foto de referencia (opcional)</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="preview"
+                  style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }}
+                />
+              )}
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={onFileChange} />
+            </div>
+          </div>
+
           {producto && (
             <>
               <div>

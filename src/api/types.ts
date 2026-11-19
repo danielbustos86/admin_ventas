@@ -45,6 +45,7 @@ export interface Producto {
   tipo: TipoProducto;
   grupoVariante: string | null;
   etiquetaVariante: string | null;
+  imagenUrl: string | null;
   disponible: boolean;
   activo: boolean;
   visibleWeb: boolean;

@@ -6,14 +6,13 @@ export function CategoriasPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [incluirInactivas, setIncluirInactivas] = useState(true);
   const [editing, setEditing] = useState<Categoria | null>(null);
   const [creating, setCreating] = useState(false);
 
   const reload = async () => {
     setLoading(true);
     try {
-      setCategorias(await CategoriasAPI.list(incluirInactivas));
+      setCategorias(await CategoriasAPI.list(true));
       setError(null);
     } catch (e: any) {
       setError(e.response?.data?.message ?? 'Error al cargar categorías');
@@ -22,25 +21,31 @@ export function CategoriasPage() {
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { reload(); }, []);
+
+  const sorted = [...categorias].sort((a, b) => a.orden - b.orden);
+
+  const move = async (cat: Categoria, dir: -1 | 1) => {
+    const idx = sorted.findIndex(c => c.id === cat.id);
+    const neighbor = sorted[idx + dir];
+    if (!neighbor) return;
+    await Promise.all([
+      CategoriasAPI.update(cat.id,      { orden: neighbor.orden }),
+      CategoriasAPI.update(neighbor.id, { orden: cat.orden }),
+    ]);
     reload();
-  }, [incluirInactivas]);
+  };
+
+  const toggleActiva = async (cat: Categoria) => {
+    await CategoriasAPI.update(cat.id, { activa: !cat.activa });
+    reload();
+  };
 
   return (
     <div>
       <h2>Categorías</h2>
 
       <div className="toolbar">
-        <div className="field">
-          <label>Mostrar</label>
-          <select
-            value={incluirInactivas ? 'todas' : 'activas'}
-            onChange={(e) => setIncluirInactivas(e.target.value === 'todas')}
-          >
-            <option value="activas">Solo activas</option>
-            <option value="todas">Todas</option>
-          </select>
-        </div>
         <button onClick={() => setCreating(true)}>+ Nueva categoría</button>
       </div>
 
@@ -53,32 +58,51 @@ export function CategoriasPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Nombre</th>
                 <th>Orden</th>
-                <th>Estado</th>
+                <th>Nombre</th>
+                <th>Visible en web</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {categorias.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.id}</td>
-                  <td>{c.nombre}</td>
-                  <td>{c.orden}</td>
+              {sorted.map((c, idx) => (
+                <tr key={c.id} style={{ opacity: c.activa ? 1 : 0.5 }}>
                   <td>
-                    <span className={`badge ${c.activa ? 'success' : 'muted'}`}>
-                      {c.activa ? 'Activa' : 'Inactiva'}
-                    </span>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <button
+                        className="ghost"
+                        style={{ padding: '2px 6px' }}
+                        disabled={idx === 0}
+                        onClick={() => move(c, -1)}
+                      >↑</button>
+                      <button
+                        className="ghost"
+                        style={{ padding: '2px 6px' }}
+                        disabled={idx === sorted.length - 1}
+                        onClick={() => move(c, 1)}
+                      >↓</button>
+                      <span style={{ color: 'var(--muted)', fontSize: '0.85em', minWidth: '20px' }}>{idx + 1}</span>
+                    </div>
+                  </td>
+                  <td>{c.nombre}</td>
+                  <td>
+                    <button
+                      className={`badge ${c.activa ? 'success' : 'muted'}`}
+                      style={{ cursor: 'pointer', border: 'none', background: 'none' }}
+                      onClick={() => toggleActiva(c)}
+                      title={c.activa ? 'Click para ocultar' : 'Click para mostrar'}
+                    >
+                      {c.activa ? 'Visible' : 'Oculta'}
+                    </button>
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <button className="ghost" onClick={() => setEditing(c)}>Editar</button>
                   </td>
                 </tr>
               ))}
-              {categorias.length === 0 && (
+              {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', color: 'var(--muted)' }}>
+                  <td colSpan={4} style={{ textAlign: 'center', color: 'var(--muted)' }}>
                     Sin categorías.
                   </td>
                 </tr>
@@ -121,8 +145,6 @@ function CategoriaForm({
   onSaved: () => void;
 }) {
   const [nombre, setNombre] = useState(categoria?.nombre ?? '');
-  const [orden, setOrden] = useState<number>(categoria?.orden ?? 0);
-  const [activa, setActiva] = useState<boolean>(categoria?.activa ?? true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,9 +153,9 @@ function CategoriaForm({
     setError(null);
     try {
       if (categoria) {
-        await CategoriasAPI.update(categoria.id, { nombre, orden, activa });
+        await CategoriasAPI.update(categoria.id, { nombre });
       } else {
-        await CategoriasAPI.create({ nombre, orden });
+        await CategoriasAPI.create({ nombre });
       }
       onSaved();
     } catch (e: any) {
@@ -151,28 +173,6 @@ function CategoriaForm({
             <label>Nombre</label>
             <input value={nombre} onChange={(e) => setNombre(e.target.value)} style={{ width: '100%' }} />
           </div>
-          <div>
-            <label>Orden</label>
-            <input
-              type="number"
-              value={orden}
-              onChange={(e) => setOrden(parseInt(e.target.value || '0', 10))}
-              style={{ width: '100%' }}
-            />
-          </div>
-          {categoria && (
-            <div>
-              <label>Estado</label>
-              <select
-                value={activa ? '1' : '0'}
-                onChange={(e) => setActiva(e.target.value === '1')}
-                style={{ width: '100%' }}
-              >
-                <option value="1">Activa</option>
-                <option value="0">Inactiva</option>
-              </select>
-            </div>
-          )}
         </div>
         {error && <div className="error">{error}</div>}
         <div className="actions">
