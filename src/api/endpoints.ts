@@ -14,6 +14,8 @@ import type {
   KioskoImage,
   KioskoState,
   Sabor,
+  VisitaStat,
+  VisitaRow,
 } from './types';
 
 export const CategoriasAPI = {
@@ -124,6 +126,13 @@ export const SaboresAPI = {
   update: (id: number, data: Partial<Pick<Sabor, 'nombre' | 'color' | 'orden' | 'activo'>>) =>
     api.patch<Sabor>(`/api/sabores/${id}`, data).then((r) => r.data),
   remove: (id: number) => api.delete(`/api/sabores/${id}`).then((r) => r.data),
+};
+
+export const VisitasAPI = {
+  stats: (desde?: string, hasta?: string) =>
+    api.get<VisitaStat[]>('/api/visitas/stats', { params: { desde, hasta } }).then((r) => r.data),
+  listado: (limit = 100) =>
+    api.get<VisitaRow[]>('/api/visitas', { params: { limit } }).then((r) => r.data),
 };
 
 export const VentasAPI = {

@@ -137,6 +137,19 @@ export interface KioskoState {
   pinnedId: number | null;
 }
 
+export interface VisitaStat {
+  origin: string;
+  visitas: number;
+}
+
+export interface VisitaRow {
+  id: number;
+  origin: string;
+  ip: string | null;
+  referrer: string | null;
+  createdAt: string;
+}
+
 export interface VentasPorHorario {
   filtros: {
     desde: string | null;

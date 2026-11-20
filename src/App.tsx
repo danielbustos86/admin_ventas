@@ -8,6 +8,7 @@ import { InsumosPage } from './pages/InsumosPage';
 import { VentasPage } from './pages/VentasPage';
 import { KioskoPage } from './pages/KioskoPage';
 import { SaboresPage } from './pages/SaboresPage';
+import { VisitasPage } from './pages/VisitasPage';
 
 export function App() {
   return (
@@ -28,6 +29,7 @@ export function App() {
           <Route path="/insumos" element={<InsumosPage />} />
           <Route path="/kiosko" element={<KioskoPage />} />
           <Route path="/sabores" element={<SaboresPage />} />
+          <Route path="/visitas" element={<VisitasPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
