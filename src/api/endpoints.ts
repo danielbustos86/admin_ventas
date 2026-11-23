@@ -16,6 +16,9 @@ import type {
   Sabor,
   VisitaStat,
   VisitaRow,
+  ConfiguracionHorario,
+  DiaHorario,
+  ForzarEstadoHorario,
 } from './types';
 
 export const CategoriasAPI = {
@@ -133,6 +136,13 @@ export const VisitasAPI = {
     api.get<VisitaStat[]>('/api/visitas/stats', { params: { desde, hasta } }).then((r) => r.data),
   listado: (limit = 100) =>
     api.get<VisitaRow[]>('/api/visitas', { params: { limit } }).then((r) => r.data),
+};
+
+export const HorarioAPI = {
+  get: () =>
+    api.get<ConfiguracionHorario>('/api/horario').then((r) => r.data),
+  update: (data: { horario: DiaHorario[]; forzarEstado: ForzarEstadoHorario }) =>
+    api.put<ConfiguracionHorario>('/api/horario', data).then((r) => r.data),
 };
 
 export const VentasAPI = {

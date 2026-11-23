@@ -150,6 +150,22 @@ export interface VisitaRow {
   createdAt: string;
 }
 
+export type ForzarEstadoHorario = 'AUTO' | 'ABIERTO' | 'CERRADO';
+
+export interface DiaHorario {
+  dia: number;
+  nombre: string;
+  cerrado?: boolean;
+  abre?: string;
+  cierra?: string;
+}
+
+export interface ConfiguracionHorario {
+  horario: DiaHorario[];
+  forzarEstado: ForzarEstadoHorario;
+  updatedAt: string;
+}
+
 export interface VentasPorHorario {
   filtros: {
     desde: string | null;

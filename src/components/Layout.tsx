@@ -29,6 +29,9 @@ export function Layout() {
           <NavLink to="/visitas" className={({ isActive }) => (isActive ? 'active' : '')}>
             Visitas web
           </NavLink>
+          <NavLink to="/horario" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Horario
+          </NavLink>
         </nav>
         <button className="logout" onClick={logout}>Cerrar sesión</button>
       </aside>
